@@ -1,10 +1,14 @@
 import { signupEvents } from "./signupevents.ts";
 import { dashboardView } from "./views/dashboard.ts";
+import { pongView } from "./views/pong.ts";
 import { playView } from "./views/play.ts";
 import { profileView } from "./views/profile.ts";
 import { signupView } from "./views/signup.ts";
 import { loginView } from "./views/login.ts";
 import { loginEvents } from "./loginevents.ts";
+import { initializeDashboard } from "./dashboardEvents.ts";
+import { initPong } from "./ponggame.ts";
+
 
 const routes = {
     index : "/",
@@ -50,6 +54,7 @@ export async function router(): Promise<void> {
 
         case routes.dashboard:
             changingArea.innerHTML = dashboardView();
+            initializeDashboard();
             break ;
 
         case routes.profile:
@@ -57,7 +62,8 @@ export async function router(): Promise<void> {
             break ;
 
         case routes.play:
-            changingArea.innerHTML = playView();
+            changingArea.innerHTML = pongView();
+            initPong();
             break ;
 
         default:

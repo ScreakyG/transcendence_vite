@@ -10,8 +10,8 @@
 
 .incorrect label {
     @apply bg-[#f06272];
-  }
+}
 
-  .incorrect input {
+.incorrect input {
     @apply border-[#f06272];
-  }
+}
