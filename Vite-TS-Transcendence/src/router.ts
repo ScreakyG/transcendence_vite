@@ -8,6 +8,8 @@ import { loginView } from "./views/login.ts";
 import { loginEvents } from "./loginevents.ts";
 import { initializeDashboard } from "./dashboardEvents.ts";
 import { initPong } from "./ponggame.ts";
+import { twofaView } from "./views/2fa.ts";
+import { init2fa } from "./2faevents.ts";
 
 
 const routes = {
@@ -16,7 +18,8 @@ const routes = {
     profile : "/profile",
     play : "/play",
     login : "/login",
-    signup : "/signup"
+    signup : "/signup",
+    twofa : "/twofa"
 }
 
 // Gestion des boutons forward et backward
@@ -66,6 +69,10 @@ export async function router(): Promise<void> {
             initPong();
             break ;
 
+        case routes.twofa:
+            changingArea.innerHTML = twofaView();
+            init2fa();
+            break ;
         default:
             break ;
     }

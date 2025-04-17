@@ -100,7 +100,9 @@ export function loginEvents(): void {
                 if (errElement)
                     errElement.innerText = "Login successfull";
                 setTimeout(() => {
-                    window.history.pushState(null, "", "/dashboard");
+                    // Si pas de 2fa redirect direct vers dashboard?
+                    // window.history.pushState(null, "", "/dashboard");
+                    window.history.pushState(null, "", "/twofa");
                     router();
                 }, 1500);
             }
