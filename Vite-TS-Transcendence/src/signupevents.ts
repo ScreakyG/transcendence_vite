@@ -69,34 +69,44 @@ function verifyInputs(data: formValues) {
 }
 
 async function sendForm(data: formValues, errElement: HTMLElement): Promise<void> {
-    const res = await fetch ("https://reqres.in/api/users", {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-    });
-
-    if (!res.ok)
+    try
     {
-        const errorData = await res.json();
+        const res = await fetch ("https://reqres.in/api/users", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
 
-        console.error("Message erreur du back : ", errorData.message);
-        errElement.innerText = errorData.message;
-        return ;
+        if (!res.ok)
+        {
+            const errorData = await res.json();
+
+            console.error("Message erreur du back : ", errorData.message);
+            errElement.innerText = errorData.message;
+            return ;
+        }
+
+        const responseData = await res.json();
+
+        console.log("Message success du back : ", responseData.message);
+        console.log(responseData);
+        errElement.innerText = "SUCCESSFULL LOGIN";
+        // errElement.innerText = responseData.message;
+
+        setTimeout(() => {
+            window.history.pushState(null, "", "/login");
+            router();
+        }, 2000);
     }
 
-    const responseData = await res.json();
-
-    console.error("Message success du back : ", responseData.message);
-    console.log(responseData);
-    errElement.innerText = "SUCCESSFULL LOGIN";
-    // errElement.innerText = responseData.message;
-
-    setTimeout(() => {
-        window.history.pushState(null, "", "/login");
-        router();
-    }, 2000);
+    catch(error)
+    {
+        console.error("Erreur du fetch : ", error);
+        if (errElement)
+            errElement.innerText = "Unexpected Error";
+    }
 }
 
 function getFormValues(): formValues {
@@ -141,18 +151,9 @@ export function signupEvents(): void {
             return ;
         }
         //Sinon on envoie les datas au back et on redirige vers /login en cas de success.
-        try
-        {
-            console.log("FORM IS VALID");
-            sendForm(inputsValues, errElement);
-        }
-
-        catch(error)
-        {
-            console.error("Erreur du fetch : ", error);
-            if (errElement)
-                errElement.innerText = "Unexpected Error";
-        }
+        console.log("FORM IS VALID");
+        sendForm(inputsValues, errElement);
     })
 
 }
+
