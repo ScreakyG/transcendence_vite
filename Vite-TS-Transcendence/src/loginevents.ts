@@ -1,5 +1,10 @@
 import { router } from "./router.ts";
 
+interface signinformValues {
+    email: string,
+    password: string,
+}
+
 // Cette fonction reset la couleur rouge sur les inputs (class incorrect) lorsque l'user ecrit a nouveau dans un input precedemment faux.
 function resetErrors(): void {
     const emailInput = document.getElementById("email-input");
@@ -23,7 +28,7 @@ function resetErrors(): void {
 
 // Verifie les inputs un par un. Retourne un array de strings qui contient les erreurs a afficher dans le form.
 // Ajouter ici pour des verifications plus poussees.
-function verifyInputs(data: {[k: string]: FormDataEntryValue}): string[] {
+function verifyInputs(data: signinformValues): string[] {
     let errors = [];
 
     if (data.email === "" || data.email == null)
@@ -46,66 +51,88 @@ function verifyInputs(data: {[k: string]: FormDataEntryValue}): string[] {
     return (errors);
 }
 
+function getFormValues(): signinformValues {
+    const emailInput = document.getElementById("email-input") as HTMLInputElement;
+    const passwordInput = document.getElementById("password-input") as HTMLInputElement;
+
+    let data: signinformValues = {
+        email: emailInput?.value,
+        password: passwordInput?.value,
+    }
+    return (data);
+}
+
+async function sendForm(data: signinformValues, errElement: HTMLElement): Promise<void> {
+    try
+    {
+        //changer l'url par celle de l'api
+        const res = await fetch ("https://reqres.in/api/users", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            // credentials: "include", // Permet de recevoir le cookie d'auth, sera utilise systematiquement dans chaque request apres.
+            body: JSON.stringify(data),
+        });
+
+        if (!res.ok)
+        {
+            const errorData = await res.json();
+
+            console.error("Message erreur du back : ", errorData.message);
+            errElement.innerText = errorData.message;
+            return ;
+        }
+
+        const responseData = await res.json();
+
+        console.log("Message success du back : ", responseData.message);
+        console.log(responseData);
+        localStorage.setItem("email", data.email); // Remplacer par vrai mail.
+        errElement.innerText = "SUCCESSFULL LOGIN";
+        // errElement.innerText = responseData.message;
+
+        setTimeout(() => {
+            window.history.pushState(null, "", "/twofa");
+            router();
+        }, 1500);
+    }
+
+    catch(error)
+    {
+        console.error("Erreur du fetch : ", error);
+        if (errElement)
+            errElement.innerText = "Unexpected Error";
+    }
+}
+
 export function loginEvents(): void {
     const form = document.getElementById("login-form");
-    const errElement = document.getElementById("error-message")
+    const errElement = document.getElementById("error-message") as HTMLElement;
 
     resetErrors();
 
     form?.addEventListener("submit", async (e) => {
         e.preventDefault();
-        console.log("LOGIN Button clicked");
+        console.log("LOGIN BUTTON CLICKED");
 
-        const formData = new FormData(form as HTMLFormElement);
-        const data = Object.fromEntries(formData);
-        console.log(data);
+        //On recup les donnees des inputs du form.
+        const inputsValues: signinformValues = getFormValues();
+        console.log("DATA TO BE SENT : ",inputsValues);
 
-        let errors = verifyInputs(data);
+
+        let errors = verifyInputs(inputsValues);
 
         //Si il y a des erreurs dans les inputs
         if (errors.length > 0)
         {
             if(errElement)
                 errElement.innerText = errors.join(". ");
-            console.log("Form is INVALID");
+            console.log("FORM NOT VALID");
         }
 
         //Si pas d'erreurs on envoie les datas du form au backend
-        else
-        {
-            console.log("Form is VALID");
-            const res = await fetch ("https://reqres.in/api/users", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            });
-
-            if (!res.ok)
-            {
-                //On peut ajouter ici une autre gestion si le back ne valide pas le signin.
-                //const error = await res.text();
-                //console.log(error);
-                if (errElement)
-                    errElement.innerText = "Something went wrong with backend";
-            }
-            else
-            {
-                //Ici on gere si le login est valide.
-                const responseData = await res.json();
-                console.log("Reponse du serveur:", responseData);
-
-                //Juste pour test un comportement, a changer plus tard
-                if (errElement)
-                    errElement.innerText = "Login successfull";
-                setTimeout(() => {
-                    // Si pas de 2fa redirect vers dashboard?
-                    // window.history.pushState(null, "", "/dashboard");
-                    window.history.pushState(null, "", "/twofa");
-                    router();
-                }, 1500);
-            }
-        }
+        console.log("FORM IS VALID");
+        sendForm(inputsValues, errElement);
     })
 }

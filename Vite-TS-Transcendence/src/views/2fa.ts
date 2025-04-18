@@ -4,6 +4,8 @@ export function twofaView():string {
             <div class="flex flex-col justify-center items-center h-1/2 w-1/2 border-2 rounded-4xl">
                 <h1>2FA AUTH</h1>
                 <img id="qr-code-img" class="w-full max-w-64 h-auto" src="">
+                <div id="user-email"></div>
+                <div id="error-message"></div>
                 <form id="twofa-form" class="flex flex-col gap-2.5 items-center">
                     <label for="code">CODE : </label>
                     <input required type="text" name="code" id="code" maxlength="6" class="w-2/3 border-2 rounded-2xl text-center">

@@ -33,34 +33,44 @@ async function getQrCode(): Promise<void> {
 
 async function sendCode(form:HTMLFormElement): Promise<void> {
     console.log("2FA FORM | Code will be sent to back");
-    window.history.pushState(null, "" , "/dashboard");
-    router();
 
 //     A Tester avec la route du backend
-//     const code = document.getElementById("code") as HTMLInputElement;
+    const code = document.getElementById("code") as HTMLInputElement;
+    const errElement = document.getElementById("error-message") as HTMLElement;
 
-//     const res = await fetch("/api/2fa/verify", {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         credentials: "include",
-//         body: JSON.stringify({ code }),
-//       });
+    try
+    {
+        const res = await fetch("https://reqres.in/api/users", {
+            method: "POST",
+            headers: {
+            "Content-Type": "application/json",
+            },
+            // credentials: "include", // A rajouter pour la vraie route.
+            body: JSON.stringify({ code }),
+        });
 
-//     // Si le code est valide , on stock le token jwt dans les cookies et on redirige vers le dashboard
-//     if (res.ok)
-//     {
-//         const { token: jwt } = await res.json();
-//         localStorage.setItem("token", jwt);
-//         window.history.pushState({}, "/dashboard");
-//         router();
-//     }
 
-//     else
-//     {
-//         console.error("Error while send 2fa code to backend");
-//     }
+        if (!res.ok)
+        {
+            const error = res.json();
+            if (errElement)
+            {
+                // errElement.innerText = error.message; //Vrai message du back.
+                errElement.innerText = "Invalid code";
+            }
+        }
+
+        console.log("2FA Successfull , redirecting to dashboard");
+
+        setTimeout(() => {
+            window.history.pushState(null, "" , "/dashboard");
+            router();
+        }, 1500);
+    }
+    catch(error)
+    {
+        console.error("Error fectch 2fa");
+    }
 }
 
 function isValidInput(form: HTMLFormElement): boolean {
@@ -95,8 +105,11 @@ function verifyCode(): void {
 }
 
 export function init2fa(): void {
-    //On peut verifier ici que le user n'a pas deja register.
-    //verify2faStatus();
-    getQrCode();
+    const mailDiv = document.getElementById("user-email") as HTMLElement;
+
+    if (mailDiv)
+        mailDiv.innerText = "2FA Code has been sent to : " + localStorage.getItem("email");
+
+    getQrCode(); // Remove si on utilise pas de qr-code
     verifyCode();
 }

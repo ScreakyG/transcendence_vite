@@ -77,7 +77,7 @@ async function sendForm(data: formValues, errElement: HTMLElement): Promise<void
             headers: {
                 'Content-Type': 'application/json',
             },
-            credentials: "include", // Permet de recevoir le cookie d'auth, sera utilise systematiquement dans chaque request apres.
+            // credentials: "include", // Permet de recevoir le cookie d'auth, sera utilise systematiquement dans chaque request apres.
             body: JSON.stringify(data),
         });
 
@@ -94,14 +94,14 @@ async function sendForm(data: formValues, errElement: HTMLElement): Promise<void
 
         console.log("Message success du back : ", responseData.message);
         console.log(responseData);
-        errElement.innerText = "SUCCESSFULL LOGIN";
+        errElement.innerText = "SUCCESSFULL REGISTER";
         // errElement.innerText = responseData.message;
 
         setTimeout(() => {
             // window.history.pushState(null, "", "/twofa"); On peut direct rediriger vers le 2fa ?
             window.history.pushState(null, "", "/login");
             router();
-        }, 2000);
+        }, 1500);
     }
 
     catch(error)
