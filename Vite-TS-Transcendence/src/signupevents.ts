@@ -1,14 +1,21 @@
 import { router } from "./router.ts";
 
+interface formValues {
+    username: string,
+    email: string,
+    password: string,
+    repeatpassword: string
+}
+
 // Cette fonction reset la couleur rouge sur les inputs (class incorrect) lorsque l'user ecrit a nouveau dans un input precedemment faux.
 function resetErrors(): void {
-    const nicknameInput = document.getElementById("nickname-input");
+    const usernameInput = document.getElementById("username-input");
     const emailInput = document.getElementById("email-input");
     const passwordInput = document.getElementById("password-input");
     const repeatPasswordInput = document.getElementById("repeat-password-input");
     const errElement = document.getElementById("error-message");
 
-    const allInputs = [nicknameInput, emailInput, passwordInput, repeatPasswordInput];
+    const allInputs = [usernameInput, emailInput, passwordInput, repeatPasswordInput];
 
     allInputs.forEach(input => {
         input?.addEventListener("input", () => {
@@ -24,15 +31,15 @@ function resetErrors(): void {
 
 // Verifie les inputs un par un. Retourne un array de strings qui contient les erreurs a afficher dans le form.
 // Ajouter ici pour des verifications plus poussees.
-function verifyInputs(data: {[k: string]: FormDataEntryValue}) {
+function verifyInputs(data: formValues) {
     let errors = [];
 
-    if (data.nickname === "" || data.nickname == null)
+    if (data.username === "" || data.username == null)
     {
-        const nicknameInput = document.getElementById("nickname-input");
+        const usernameInput = document.getElementById("username-input");
 
-        errors.push("Nickname is required");
-        nicknameInput?.parentElement?.classList.add("incorrect");
+        errors.push("Username is required");
+        usernameInput?.parentElement?.classList.add("incorrect");
     }
 
     if (data.email === "" || data.email == null)
@@ -61,64 +68,91 @@ function verifyInputs(data: {[k: string]: FormDataEntryValue}) {
     return (errors);
 }
 
+async function sendForm(data: formValues, errElement: HTMLElement): Promise<void> {
+    const res = await fetch ("https://reqres.in/api/users", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+    });
+
+    if (!res.ok)
+    {
+        const errorData = await res.json();
+
+        console.error("Message erreur du back : ", errorData.message);
+        errElement.innerText = errorData.message;
+        return ;
+    }
+
+    const responseData = await res.json();
+
+    console.error("Message success du back : ", responseData.message);
+    console.log(responseData);
+    errElement.innerText = "SUCCESSFULL LOGIN";
+    // errElement.innerText = responseData.message;
+
+    setTimeout(() => {
+        window.history.pushState(null, "", "/login");
+        router();
+    }, 2000);
+}
+
+function getFormValues(): formValues {
+    const usernameInput = document.getElementById("username-input") as HTMLInputElement;
+    const emailInput = document.getElementById("email-input") as HTMLInputElement;
+    const passwordInput = document.getElementById("password-input") as HTMLInputElement;
+    const repeatPasswordInput = document.getElementById("repeat-password-input") as HTMLInputElement;
+
+    let data: formValues = {
+        username: usernameInput?.value,
+        email: emailInput?.value,
+        password: passwordInput?.value,
+        repeatpassword: repeatPasswordInput?.value
+    }
+    return (data);
+}
+
 export function signupEvents(): void {
     const form = document.getElementById("signup-form");
-    const errElement = document.getElementById("error-message")
+    const errElement = document.getElementById("error-message") as HTMLElement;
 
     resetErrors();
 
     form?.addEventListener("submit", async (e) => {
         e.preventDefault();
-        console.log("SIGNUP Button clicked");
+        console.log("SIGNUP BUTTON CLICKED");
 
-        const formData = new FormData(form as HTMLFormElement);
-        const data = Object.fromEntries(formData);
-        console.log(data);
+        //On recupere les donnees des inputs du form.
+        const inputsValues: formValues = getFormValues();
+        console.log("DATA TO BE SENT : ",inputsValues);
 
-        let errors = verifyInputs(data);
 
-        //Si il y a des erreurs dans les inputs
+        let errors = verifyInputs(inputsValues);
+
+        //Si il y a des erreurs dans les inputs on affiche les erreurs et on stop.
         if (errors.length > 0)
         {
             if (errElement)
                 errElement.innerText = errors.join(". ");
-            console.log("Form is INVALID");
+            console.log("FORM NOT VALID");
+
+            return ;
+        }
+        //Sinon on envoie les datas au back et on redirige vers /login en cas de success.
+        try
+        {
+            console.log("FORM IS VALID");
+            sendForm(inputsValues, errElement);
         }
 
-        //Si pas d'erreurs on envoie les datas du form au backend
-        else
+        catch(error)
         {
-            console.log("Form is VALID");
-            const res = await fetch ("https://reqres.in/api/users", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            });
-
-            if (!res.ok)
-            {
-                //On peut ajouter ici une autre gestion si le serveur envoie un reject
-                //const error = await res.text();
-                //console.log(error);
-                if (errElement)
-                    errElement.innerText = "Something went wrong with backend";
-            }
-            else
-            {
-                //Ici on gere si le register est valide.
-                const responseData = await res.json();
-                console.log("Reponse du serveur:", responseData);
-
-                //Juste pour test un comportement, a changer plus tard
-                if (errElement)
-                    errElement.innerText = "Register successfull, you can now login";
-                setTimeout(() => {
-                    window.history.pushState(null, "", "/login");
-                    router();
-                }, 2000);
-            }
+            console.error("Erreur du fetch : ", error);
+            if (errElement)
+                errElement.innerText = "Unexpected Error";
         }
     })
+
 }

@@ -19,7 +19,7 @@ const routes = {
     play : "/play",
     login : "/login",
     signup : "/signup",
-    twofa : "/twofa"
+    twofa: "/twofa"
 }
 
 // Gestion des boutons forward et backward
@@ -59,7 +59,7 @@ export async function router(): Promise<void> {
             changingArea.innerHTML = dashboardView();
             initializeDashboard();
             break ;
-
+ 
         case routes.profile:
             changingArea.innerHTML = profileView();
             break ;
@@ -73,6 +73,7 @@ export async function router(): Promise<void> {
             changingArea.innerHTML = twofaView();
             init2fa();
             break ;
+
         default:
             break ;
     }

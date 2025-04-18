@@ -84,7 +84,7 @@ export function loginEvents(): void {
 
             if (!res.ok)
             {
-                //On peut ajouter ici une autre gestion si le serveur envoie un reject
+                //On peut ajouter ici une autre gestion si le back ne valide pas le signin.
                 //const error = await res.text();
                 //console.log(error);
                 if (errElement)
@@ -100,7 +100,7 @@ export function loginEvents(): void {
                 if (errElement)
                     errElement.innerText = "Login successfull";
                 setTimeout(() => {
-                    // Si pas de 2fa redirect direct vers dashboard?
+                    // Si pas de 2fa redirect vers dashboard?
                     // window.history.pushState(null, "", "/dashboard");
                     window.history.pushState(null, "", "/twofa");
                     router();

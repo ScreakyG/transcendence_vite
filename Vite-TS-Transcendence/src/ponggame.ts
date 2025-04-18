@@ -3,21 +3,32 @@ import  { Howl }  from "howler";
 
 //---------------------MAIN-GAME-------------------------------//
 
-// const gameId = {
-//     gameContainer: document.getElementById("game-container")as HTMLElement,
-//     gameBoard: document.getElementById("game-board")as HTMLElement,
-//     ball: document.getElementById("ball")as HTMLElement,
-//     paddleLeft: document.getElementById("paddle-left")as HTMLElement,
-//     paddleRight: document.getElementById("paddle-right")as HTMLElement,
-//     scoreLeft: document.getElementById("score-left")as HTMLElement,
-//     scoreRight: document.getElementById("score-right")as HTMLElement,
-//     pauseGame: document.getElementById("button-pause") as HTMLElement,
-//     resetGame: document.getElementById("button-reset")as HTMLElement,
-//     winnerMsg: document.getElementById("winner-message") as HTMLElement,
-//     ballColor: document.getElementById("button-ball") as HTMLElement,
-//     basicButton: document.getElementById("button-basic") as HTMLElement,
-// }
+type GameElements = {
+    gameContainer: HTMLElement;
+    gameBoard: HTMLElement;
+    ball: HTMLElement;
+    paddleLeft: HTMLElement;
+    paddleRight: HTMLElement;
+    scoreLeft: HTMLElement;
+    scoreRight: HTMLElement;
+    pauseGame: HTMLElement;
+    resetGame: HTMLElement;
+    winnerMsg: HTMLElement;
+    ballColor: HTMLElement;
+    basicButton: HTMLElement;
+}
 
+type GameSounds = {
+    smashBall: Howl;
+    whiteBall: Howl;
+    featuresMode: Howl;
+    defaultMode: Howl;
+    victorySound: Howl;
+    paddleSound: Howl;
+    smashSound: Howl;
+    doublePoints: Howl;
+}
+// Utiliser les types définis
 
 function getElements() {
     const gameId = {
@@ -38,45 +49,57 @@ function getElements() {
 }
 
 //sounds with howler.js
-const smashBall = new Howl({
-    src: ["../sounds/sonic-boom.mp3"],
-    volume: 0.5
-});
+function initSounds(): GameSounds {
+    const smashBall = new Howl({
+     src: ["../sounds/sonic-boom.mp3"],
+     volume: 0.5
+    });
 
-const whiteBall = new Howl({
-    src: ["../sounds/gated-drop.mp3"],
-    volume: 0.5
-});
+    const whiteBall = new Howl({
+     src: ["../sounds/gated-drop.mp3"],
+     volume: 0.5
+    });
 
-const featuresMode = new Howl({
-    src: ["../sounds/features-mode-robot.mp3"],
-    volume: 0.5
-});
+    const featuresMode = new Howl({
+     src: ["../sounds/features-mode-robot.mp3"],
+     volume: 0.5
+    });
 
-const defaultMode = new Howl({
-    src: ["../sounds/default_mode_robot.mp3"],
-    volume: 0.5
-});
+    const defaultMode = new Howl({
+        src: ["../sounds/default_mode_robot.mp3"],
+        volume: 0.5
+    });
 
-const victorySound = new Howl({
-    src: ["../sounds/victory.mp3"],
-    volume: 0.4
-});
+    const victorySound = new Howl({
+     src: ["../sounds/victory.mp3"],
+     volume: 0.4
+    });
 
-const paddleSound = new Howl({
-    src: ["../sounds/bubble-pop.mp3"],
-    volume: 0.6
-});
+    const paddleSound = new Howl({
+        src: ["../sounds/bubble-pop.mp3"],
+        volume: 0.6
+    });
 
-const smashSound = new Howl({
-    src: ["../sounds/explo.mp3"],
-    volume: 1.0
-});
+    const smashSound = new Howl({
+        src: ["../sounds/explo.mp3"],
+        volume: 1.0
+    });
 
-const doublePoints = new Howl({
-    src: ["../sounds/doublexp_zombie.mp3"],
-    volume: 0.1
-});
+    const doublePoints = new Howl({
+     src: ["../sounds/doublexp_zombie.mp3"],
+     volume: 0.1
+    });
+    return {
+        smashBall,
+        whiteBall,
+        featuresMode,
+        defaultMode,
+        victorySound,
+        paddleSound,
+        smashSound,
+        doublePoints
+    };
+}
 
 
 //variable globale avec valeur default const
@@ -87,13 +110,15 @@ const paddleHeight:number = 80;
 const paddleWidth:number = 10;
 const paddleSpeed:number = 8;
 const margin:number = 10;
-const winScore:number = 10005;
+const winScore:number = 5;
 
 //game status variable
 let isBasic:boolean = true;
-let pause:boolean = false;
+let pause:boolean = true;
 let isResetting:boolean = false; //pour ne pas overlap sur une loop pendant un reset
 let colorChangeTimer:number | undefined; // id de setTimeout pour le cancel avec clearTimeout
+let gameSounds: GameSounds
+let gameId: GameElements 
 
 type GameState = {
     ballX:number;
@@ -149,7 +174,7 @@ function setupKeyPress(): void {
 }
 
 //reduit les valeur de paddle si je monte et augmente pour descendre pour ensuite maligner visuellement avec top, plus le chiffre est faible plus je suis haut et inversement
-function updatePaddles(gameId): void {
+function updatePaddles(gameId: GameElements): void {
     if (keys.w && gameState.paddleLeftY > 0) {
         gameState.paddleLeftY -= paddleSpeed;
     }
@@ -170,7 +195,7 @@ function updatePaddles(gameId): void {
     }
 }
 
-function resetPaddles(gameId):void {
+function resetPaddles(gameId: GameElements):void {
     if (gameId.paddleLeft) {
         gameId.paddleLeft.style.top = `${160}px`;
     }
@@ -179,7 +204,7 @@ function resetPaddles(gameId):void {
     }
 }
 
-function resetScore(gameId):void {
+function resetScore(gameId: GameElements):void {
     if (gameId.scoreLeft || gameId.scoreLeft) {
         gameId.scoreLeft.textContent = '0';
         gameId.scoreRight.textContent = '0';
@@ -187,7 +212,7 @@ function resetScore(gameId):void {
 }
 
 //recentre la balle avec un delais init le score et renvoie la balle
-function resetBall(gameId):void {
+function resetBall(gameId: GameElements):void {
     if (isResetting) return ;
     isResetting = true; //pour eviter datarace sur le mouvement de la balle
     //remet la balle au centre sans ms
@@ -214,7 +239,7 @@ function resetBall(gameId):void {
     }, 1000)
 }
 
-function applyColorEffect(gameId, leftOrRight:string, status:string): string {
+function applyColorEffect(gameId: GameElements, leftOrRight:string, status:string): string {
     if (isBasic === false) {
     const originalColor = "white";
     let colors:string = gameId.ball.style.backgroundColor;
@@ -227,7 +252,6 @@ function applyColorEffect(gameId, leftOrRight:string, status:string): string {
         }
      }
      if (colors === "red" && status === "bounce") {
-         console.log("speed red ball check")
          const dirX = Math.sign(gameState.ballSpeedX || 1);
          const boostedSpeed = 14 * dirX;
          gameState.ballSpeedX = boostedSpeed;
@@ -251,15 +275,15 @@ function applyColorEffect(gameId, leftOrRight:string, status:string): string {
 
 function applySoundEffect(colors:string):void {
     if (colors === "red") {
-        smashSound.play();
+        gameSounds?.smashSound.play();
     }
     else {
-        paddleSound.play();
+        gameSounds?.paddleSound.play();
     }
 }
 
 
-function updateBall(gameId): void {
+function updateBall(gameId: GameElements): void {
     let ballColors:string = gameId.ball.style.backgroundColor;
     gameState.ballX += gameState.ballSpeedX;
     gameState.ballY += gameState.ballSpeedY;
@@ -301,7 +325,7 @@ function updateBall(gameId): void {
 }
 
 //change le status de pause
-function changePause(gameId): void{
+function changePause(gameId: GameElements): void{
     pause = !pause; //change de true a false et inversement
     if (gameId.pauseGame) {
         if (pause === true) {
@@ -317,7 +341,7 @@ function changePause(gameId): void{
 }
 
 //reset le jeu
-function resetGame(gameId): void {
+function resetGame(gameId: GameElements): void {
     gameState.scoreRight = 0
     gameState.scoreLeft = 0
     gameState.paddleRightY = 160;
@@ -327,17 +351,14 @@ function resetGame(gameId): void {
     resetScore(gameId);
 }
 
-function changeBall(gameId): void {
+function changeBall(gameId: GameElements): void {
   if (!isBasic) {
     const temp:string = gameId.ball.style.backgroundColor;
-    const colors:string[] = ["red", "blue", "white"];
+    const colors:string[] = ["red", "blue", "white", "green"];
     let randomColor:string = colors[Math.floor(Math.random() * colors.length)];
-    console.log(`ma couleur avant le rand: ${temp}`);
-    console.log(`ma couleur random: ${randomColor}`);
     while (randomColor === temp) {
         randomColor = colors[Math.floor(Math.random() * colors.length)];
     }
-    console.log(`ma couleur apres la boucle while: ${randomColor}`);
     if (temp === "red" && randomColor !== "red") {
       const dirX:number = Math.sign(gameState.ballSpeedX) || 1;
       const dirY:number = Math.sign(gameState.ballSpeedY) || 1;
@@ -348,58 +369,61 @@ function changeBall(gameId): void {
       } else if (randomColor === "white") {
         gameState.ballSpeedX = 5 * dirX;
         gameState.ballSpeedY = 5 * currentRatio * dirY;
+      } else if (randomColor === "green") {
+          gameState.ballSpeedX = 4 * dirX;
+          gameState.ballSpeedY = 8 * dirY;
       }
     }
     gameId.ball.style.backgroundColor = randomColor;
     if (randomColor === "blue") {
-      doublePoints.play();
+      gameSounds?.doublePoints.play();
     }
     else if (randomColor === "red") {
-      smashBall.play();
+      gameSounds?.smashBall.play();
     }
     else if (randomColor === "white") {
-      whiteBall.play();
+      gameSounds?.whiteBall.play();
+    }
+    else if (randomColor === "green") {
+        gameSounds?.whiteBall.play();
     }
   }
 }
 
 
-function setBasicMode(gameId):void {
-    console.log("check-mode-switch")
+function setBasicMode(gameId: GameElements):void {
     if (isBasic === false) {
        isBasic = true;
-       defaultMode.play();
+       gameSounds?.defaultMode.play();
        gameId.basicButton.textContent = "features-mode";
        gameId.ball.style.backgroundColor = "white";
     }
     else {
        isBasic = false;
-       featuresMode.play();
+       gameSounds?.featuresMode.play();
         gameId.basicButton.textContent = "default-mode";
     }
 }
 
 //ecoute bouton
-function listenStatus(gameId): void {
+
+function listenStatus(gameId: GameElements): void {
     if (gameId.pauseGame) {
-        // gameId.pauseGame.addEventListener("click", changePause(gameId));
-        gameId.pauseGame.addEventListener("click", (e: MouseEvent) => {
-            changePause(gameId);
-            console.log("PAUSE/START CLICKED");
-        })
+        gameId.pauseGame.addEventListener("click", () =>  changePause(gameId));
     }
     if (gameId.resetGame) {
-        gameId.resetGame.addEventListener("click", resetGame(gameId))
+        gameId.resetGame.addEventListener("click", () => resetGame(gameId));
     }
     if (gameId.ballColor) {
-        gameId.ballColor.addEventListener("click", changeBall(gameId))
+        gameId.ballColor.addEventListener("click", () => changeBall(gameId));
+        console.log("ball color dispo");
     }
     if (gameId.basicButton) {
-        gameId.basicButton.addEventListener("click", setBasicMode(gameId))
+        gameId.basicButton.addEventListener("click", () => setBasicMode(gameId));
     }
 }
 
-function changeWinnerMsg(gameId, winnerName:string) : void {
+function changeWinnerMsg(gameId: GameElements, winnerName:string) : void {
     if (gameId.winnerMsg) {
         if (winnerName) {
          setTimeout(() => {
@@ -412,21 +436,21 @@ function changeWinnerMsg(gameId, winnerName:string) : void {
     }
 }
 
-function checkWinner(gameId): void {
+function checkWinner(gameId: GameElements): void {
     if (gameState.scoreLeft >= winScore) {
         confetti();
         pause = true;
-        victorySound.play();
+        gameSounds?.victorySound.play();
         changeWinnerMsg(gameId,"player1");
     } else if (gameState.scoreRight >= winScore) {
         confetti();
         pause = true;
-        victorySound.play();
+        gameSounds?.victorySound.play();
         changeWinnerMsg(gameId,"player2");
     }
 }
 
-function autoChangeColor(gameId): void {
+function autoChangeColor(gameId: GameElements): void {
     if (pause)return;
 
     const delay = Math.floor(Math.random() * 5000) + 5000; // 5s a 10s
@@ -437,27 +461,33 @@ function autoChangeColor(gameId): void {
          }
     }, delay);
 }
-
 //-----------------------MAIN-GAME------------------------------//
-// gameId.winnerMsg.textContent = `Reach ${winScore} point(s) to claim victory!🏆`;
 
+let animationFrameId:number = -1;
 //main loop
-// listenStatus();
-function gameLoop(gameId): void {
+function gameLoop(gameId: GameElements): void {
     if (pause === false) {
         updatePaddles(gameId)
         updateBall(gameId);
     }
-    checkWinner(gameId);
-    requestAnimationFrame(gameLoop);
+    checkWinner(gameId); 
+    animationFrameId = requestAnimationFrame(() => gameLoop(gameId)); 
+    console.log( animationFrameId);
 }
-// setupKeyPress();
-// gameLoop();
+
+
 
 export function initPong(): void {
-    console.log("WORKING");
-    const gameId = getElements();
+    if (animationFrameId !== -1) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = -1;
+    }
+    gameId = getElements();
+    gameId.winnerMsg.textContent = `Reach ${winScore} point(s) to claim victory!🏆`;
     listenStatus(gameId);
+    if (!gameSounds) {
+        gameSounds = initSounds();
+    }
     setupKeyPress();
-    gameLoop(gameId);
+    animationFrameId = requestAnimationFrame(() => gameLoop(gameId));
 }
