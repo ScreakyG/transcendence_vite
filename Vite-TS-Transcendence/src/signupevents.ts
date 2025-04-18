@@ -71,11 +71,13 @@ function verifyInputs(data: formValues) {
 async function sendForm(data: formValues, errElement: HTMLElement): Promise<void> {
     try
     {
+        //changer l'url par celle de l'api
         const res = await fetch ("https://reqres.in/api/users", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: "include", // Permet de recevoir le cookie d'auth, sera utilise systematiquement dans chaque request apres.
             body: JSON.stringify(data),
         });
 
@@ -96,6 +98,7 @@ async function sendForm(data: formValues, errElement: HTMLElement): Promise<void
         // errElement.innerText = responseData.message;
 
         setTimeout(() => {
+            // window.history.pushState(null, "", "/twofa"); On peut direct rediriger vers le 2fa ?
             window.history.pushState(null, "", "/login");
             router();
         }, 2000);
@@ -156,4 +159,3 @@ export function signupEvents(): void {
     })
 
 }
-
