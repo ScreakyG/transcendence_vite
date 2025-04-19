@@ -7,9 +7,10 @@ import { signupView } from "./views/signup.ts";
 import { loginView } from "./views/login.ts";
 import { loginEvents } from "./loginevents.ts";
 import { initializeDashboard } from "./dashboardEvents.ts";
-import { initPong } from "./ponggame.ts";
+import { initPong, stopGame, stopPong } from "./ponggame.ts";
 import { twofaView } from "./views/2fa.ts";
 import { init2fa } from "./2faevents.ts";
+import { isUserAuth } from "./auth.ts";
 
 
 const routes = {
@@ -56,12 +57,23 @@ export async function router(): Promise<void> {
             break;
 
         case routes.dashboard:
+            const isAuth: boolean = await isUserAuth()// Test if user is logged to protect access to views (just testing).
+            console.log(isAuth);
+            if (isAuth === false)
+            {
+                console.log("User is not logged, redirecting to login");
+                window.history.pushState(null, "", "/");
+                router();
+                return;
+            }
             changingArea.innerHTML = dashboardView();
             initializeDashboard();
+            stopPong();//reset pong
             break ;
- 
+
         case routes.profile:
             changingArea.innerHTML = profileView();
+            stopPong();//reset pong
             break ;
 
         case routes.play:

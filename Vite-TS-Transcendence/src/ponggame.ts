@@ -119,6 +119,7 @@ let isResetting:boolean = false; //pour ne pas overlap sur une loop pendant un r
 let colorChangeTimer:number | undefined; // id de setTimeout pour le cancel avec clearTimeout
 let gameSounds: GameSounds
 let gameId: GameElements 
+let animationFrameId:number = -1;
 
 type GameState = {
     ballX:number;
@@ -369,10 +370,7 @@ function changeBall(gameId: GameElements): void {
       } else if (randomColor === "white") {
         gameState.ballSpeedX = 5 * dirX;
         gameState.ballSpeedY = 5 * currentRatio * dirY;
-      } else if (randomColor === "green") {
-          gameState.ballSpeedX = 4 * dirX;
-          gameState.ballSpeedY = 8 * dirY;
-      }
+    }
     }
     gameId.ball.style.backgroundColor = randomColor;
     if (randomColor === "blue") {
@@ -416,7 +414,6 @@ function listenStatus(gameId: GameElements): void {
     }
     if (gameId.ballColor) {
         gameId.ballColor.addEventListener("click", () => changeBall(gameId));
-        console.log("ball color dispo");
     }
     if (gameId.basicButton) {
         gameId.basicButton.addEventListener("click", () => setBasicMode(gameId));
@@ -463,7 +460,6 @@ function autoChangeColor(gameId: GameElements): void {
 }
 //-----------------------MAIN-GAME------------------------------//
 
-let animationFrameId:number = -1;
 //main loop
 function gameLoop(gameId: GameElements): void {
     if (pause === false) {
@@ -472,12 +468,19 @@ function gameLoop(gameId: GameElements): void {
     }
     checkWinner(gameId); 
     animationFrameId = requestAnimationFrame(() => gameLoop(gameId)); 
-    console.log( animationFrameId);
 }
 
-
+//reset game si leave PongView
+export function stopPong(): void {
+    pause = true;
+    cancelAnimationFrame(animationFrameId);
+    animationFrameId = -1;
+    gameId = getElements();
+    resetGame(gameId);
+}
 
 export function initPong(): void {
+    setupKeyPress();
     if (animationFrameId !== -1) {
         cancelAnimationFrame(animationFrameId);
         animationFrameId = -1;
@@ -488,6 +491,5 @@ export function initPong(): void {
     if (!gameSounds) {
         gameSounds = initSounds();
     }
-    setupKeyPress();
     animationFrameId = requestAnimationFrame(() => gameLoop(gameId));
 }
